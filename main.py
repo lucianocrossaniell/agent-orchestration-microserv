@@ -9,7 +9,7 @@ from pydantic import BaseModel
 from typing import Optional
 
 # Import our agent and settings
-from agent import SingleAgent
+from single_agent import SingleAgent
 from config import settings
 
 # Set up logging so we can see what's happening
@@ -81,15 +81,16 @@ async def health_check():
             detail="Agent not initialized - check your OpenAI API key in .env file"
         )
     
-    return {
-        "status": "healthy",
-        "agent": agent.get_agent_info(),
-        "settings": {
-            "name": settings.agent_name,
-            "description": settings.agent_description,
-            "port": settings.port
-        }
+    # Use BaseAgent's built-in health check
+    health_status = agent.get_health_status()
+    
+    # Add additional info
+    health_status["settings"] = {
+        "port": settings.port,
+        "model": settings.openai_model
     }
+    
+    return health_status
 
 @app.post("/agent/query", response_model=QueryResponse)
 async def process_query(request: QueryRequest):
@@ -105,8 +106,18 @@ async def process_query(request: QueryRequest):
     
     try:
         # Send the user's message to the agent and get a response
-        result = await agent.process_query(request.query, request.session_id)
-        return QueryResponse(**result)
+        # Use the new BaseAgent method process_task instead of process_query
+        result = await agent.process_task(request.query, {"session_id": request.session_id})
+        
+        # Map BaseAgent response to our API response format
+        response = QueryResponse(
+            query=result["task"],
+            response=result["result"],
+            session_id=request.session_id,
+            agent_name=result["agent_name"], 
+            status=result["status"]
+        )
+        return response
     except Exception as e:
         logger.error(f"Error processing query: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error processing query: {str(e)}")
@@ -130,14 +141,9 @@ async def get_available_tools():
     if agent is None:
         raise HTTPException(status_code=503, detail="Agent not initialized")
     
+    # Use BaseAgent's built-in method for getting tools
     return {
-        "tools": [
-            {
-                "name": tool.name,
-                "description": tool.description
-            }
-            for tool in agent.tools
-        ]
+        "tools": agent.get_available_tools()
     }
 
 # This runs the web server when you execute: python main.py

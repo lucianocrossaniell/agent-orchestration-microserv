@@ -1,13 +1,27 @@
-# 🤖 Single Agent - Your Personal AI Assistant
+# 🤖 BaseAgent Foundation - Microservice Agent Architecture
 
-A simple AI agent that you can chat with in your browser. It can do math, analyze text, and have conversations using OpenAI's GPT-4.
+A foundational framework for creating AI microservice agents that can be orchestrated together. This project provides a **BaseAgent** class that all specialized agents inherit from, plus an example **SingleAgent** implementation.
 
-## What Can It Do?
+Perfect for building agent orchestration systems where multiple specialized agents work together!
 
-- 💬 **Chat naturally** like talking to a human
-- 🧮 **Calculate math** - Ask it "What's 25 * 4 + 10?"
-- 📝 **Analyze text** - Give it text and it counts words/characters
-- 🎯 **Smart tool usage** - Automatically picks the right tool for each task
+## What This Framework Provides
+
+### 🏗️ BaseAgent Foundation
+- **Inheritance-based architecture** - Create new agents by extending BaseAgent
+- **Common functionality** - HTTP server, OpenAI integration, error handling, health checks
+- **Standardized API** - All agents follow the same patterns
+- **Easy orchestration** - Agents can easily communicate with each other
+
+### 🤖 Example SingleAgent
+- **Calculator tools** - Performs mathematical calculations
+- **Text analysis** - Analyzes text content and structure  
+- **Chat interface** - Browser-based testing interface
+- **Demonstration** - Shows how to build agents using BaseAgent
+
+### 🚀 Future Ready
+- **Scalable design** - Add new agent types in minutes
+- **Microservice architecture** - Each agent runs independently
+- **Orchestration ready** - Perfect foundation for multi-agent systems
 
 ## Quick Start (3 Steps)
 
@@ -50,20 +64,86 @@ The script will:
 ### API Documentation
 Visit `http://localhost:8000/docs` to see all available API endpoints.
 
-## File Structure (What Each File Does)
+## Architecture & File Structure
 
+### 🏗️ BaseAgent Architecture
 ```
-single-agent/
-├── start.sh          # 🚀 Main startup script - run this to start everything
-├── chat.html         # 💬 Web chat interface - open this in your browser
-├── main.py           # 🌐 Web server that handles requests
-├── agent.py          # 🤖 The AI agent with tools (calculator, text analyzer)
-├── config.py         # ⚙️  Configuration settings from .env file
-├── requirements.txt  # 📦 List of Python packages needed
-├── .env.example      # 📋 Template for your settings
-├── .env             # 🔐 Your actual settings (you create this)
-└── Dockerfile       # 🐳 For running in Docker (optional)
+BaseAgent (base_agent.py)
+├── Common functionality for all agents
+├── OpenAI integration and configuration  
+├── Standard API patterns and error handling
+├── Health checks and monitoring
+└── Abstract methods for specialization
+
+SingleAgent (single_agent.py)
+├── Inherits from BaseAgent
+├── Implements calculator and text processing tools
+└── Example of how to create specialized agents
 ```
+
+### 📁 File Structure
+```
+agent-microservice/
+├── start.sh              # 🚀 Main startup script
+├── chat.html             # 💬 Web chat testing interface
+├── main.py               # 🌐 FastAPI web server
+├── base_agent.py         # 🏗️ BaseAgent foundation class
+├── single_agent.py       # 🤖 Example specialized agent
+├── config.py             # ⚙️ Configuration management
+├── tools/                # 🔧 Reusable tool modules
+│   ├── __init__.py
+│   ├── calculator.py     # Math calculation tool
+│   └── text_processor.py # Text analysis tool
+├── requirements.txt      # 📦 Python dependencies
+├── .env.example          # 📋 Configuration template
+└── Dockerfile           # 🐳 Container deployment
+```
+
+## Creating New Agents
+
+The BaseAgent framework makes it incredibly easy to create new specialized agents:
+
+### 1. Create a New Agent Class
+```python
+from base_agent import BaseAgent
+from langchain.tools import Tool
+
+class PDFAgent(BaseAgent):
+    def _get_agent_description(self) -> str:
+        return "Specialized agent for PDF generation and processing"
+    
+    def _initialize_tools(self) -> List[Tool]:
+        return [
+            Tool(
+                name="GeneratePDF",
+                func=self.generate_pdf,
+                description="Generate a PDF from provided data"
+            ),
+            Tool(
+                name="ReadPDF", 
+                func=self.read_pdf,
+                description="Extract text from PDF files"
+            )
+        ]
+    
+    def generate_pdf(self, data: str) -> str:
+        # Your PDF generation logic here
+        return "PDF generated successfully"
+```
+
+### 2. Update main.py
+```python
+from pdf_agent import PDFAgent  # Instead of SingleAgent
+agent = PDFAgent()  # Use your new agent
+```
+
+### 3. That's it!
+Your new agent automatically gets:
+- ✅ HTTP server and API endpoints
+- ✅ OpenAI integration 
+- ✅ Error handling and logging
+- ✅ Health checks and monitoring
+- ✅ Standardized communication patterns
 
 ## Customization
 
